@@ -1,13 +1,17 @@
 import { db } from "../../../server/db";
-import { startOfMonth, endOfMonth, subMonths, format } from "date-fns";
+import { startOfMonth, subMonths, format } from "date-fns";
 import { es } from "date-fns/locale";
 import { SpendingTrend } from "../../../components/charts/spending-trend";
 import { Amount } from "../../../components/shared/amount";
+import { resolveRange } from "@/lib/date-range";
 
-export default async function OverviewPage() {
+export default async function OverviewPage({
+  searchParams,
+}: {
+  searchParams: { range?: string };
+}) {
+  const { from, to } = resolveRange(searchParams.range);
   const now = new Date();
-  const from = startOfMonth(now);
-  const to = endOfMonth(now);
 
   const transactions = await db.transaction.findMany({
     where: { date: { gte: from, lte: to } },

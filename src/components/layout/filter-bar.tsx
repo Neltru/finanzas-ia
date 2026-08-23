@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useFiltersStore, type DateRangePreset } from "../../stores/filters.store";
 
 const PRESETS: { value: DateRangePreset; label: string }[] = [
@@ -14,6 +15,10 @@ export function FilterBar() {
   const dateRange = useFiltersStore((s) => s.dateRange);
   const setDateRange = useFiltersStore((s) => s.setDateRange);
 
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   function handlePreset(preset: DateRangePreset) {
     const to = new Date();
     const from = new Date();
@@ -26,6 +31,11 @@ export function FilterBar() {
     }
 
     setDateRange({ from, to, preset });
+
+    // Reflejar en la URL para que los Server Components reaccionen
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("range", preset);
+    router.push(`${pathname}?${params.toString()}`);
   }
 
   return (

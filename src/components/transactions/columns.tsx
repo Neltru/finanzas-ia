@@ -4,6 +4,7 @@ import { type ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Amount } from "../../components/shared/amount";
+import { CategorySelect } from "./category-select";
 
 export type TransactionRow = {
   id: string;
@@ -43,16 +44,12 @@ export const columns: ColumnDef<TransactionRow>[] = [
   {
     accessorKey: "category",
     header: "Categoría",
-    cell: ({ row }) => {
-      const cat = row.original.category;
-      const esManual = row.original.categorizationSource === "MANUAL";
-      return (
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs">
-          {cat?.name ?? "Sin clasificar"}
-          {esManual && <span className="text-neutral-400" title="Editado manualmente">✎</span>}
-        </span>
-      );
-    },
+    cell: ({ row }) => (
+      <CategorySelect
+        transactionId={row.original.id}
+        currentCategoryId={row.original.category?.id ?? null}
+      />
+    ),
   },
   {
     accessorKey: "amount",
