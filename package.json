@@ -14,6 +14,7 @@
     "db:studio": "prisma studio",
     "worker:sync": "tsx src/server/jobs/sync-transactions.worker.ts",
     "worker:categorize": "tsx src/server/jobs/categorize-transaction.worker.ts",
+    "test:categorize": "tsx scripts/test-categorize.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "prisma": {
       "seed": "tsx prisma/seed.ts"
@@ -24,8 +25,8 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.27.3",
     "@auth/prisma-adapter": "^2.11.3",
+    "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^5.22.0",
     "@tanstack/react-query": "^5.101.4",
     "@tanstack/react-table": "^8.21.3",
