@@ -4,6 +4,7 @@ import { type ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Amount } from "../../components/shared/amount";
+import { fromDbDate } from "../../lib/format";
 import { CategorySelect } from "./category-select";
 
 export type TransactionRow = {
@@ -23,7 +24,7 @@ export const columns: ColumnDef<TransactionRow>[] = [
     header: "Fecha",
     cell: ({ row }) => (
       <span className="text-neutral-500">
-        {format(row.original.date, "d MMM yyyy", { locale: es })}
+        {format(fromDbDate(row.original.date), "d MMM yyyy", { locale: es })}
       </span>
     ),
   },

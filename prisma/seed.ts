@@ -214,9 +214,11 @@ async function main() {
       },
     });
   }
+  
 
   console.log(` Listo: ${txs.length} transacciones, ${categories.length} categorías`);
 }
+
 
 main()
   .catch((e) => {

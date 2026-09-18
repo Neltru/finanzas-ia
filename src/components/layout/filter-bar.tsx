@@ -2,6 +2,8 @@
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useFiltersStore, type DateRangePreset } from "../../stores/filters.store";
+import { useQuery } from "@tanstack/react-query";
+import { useTRPC } from "@/lib/trpc";
 
 const PRESETS: { value: DateRangePreset; label: string }[] = [
   { value: "7d", label: "7 días" },
@@ -18,6 +20,10 @@ export function FilterBar() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const trpc = useTRPC();
+  const { data: accounts } = useQuery(trpc.account.list.queryOptions());
+  const selectedAccountId = useFiltersStore((s) => s.selectedAccountId);
+  const setSelectedAccountId = useFiltersStore((s) => s.setSelectedAccountId);
 
   function handlePreset(preset: DateRangePreset) {
     const to = new Date();
@@ -39,7 +45,22 @@ export function FilterBar() {
   }
 
   return (
-    <div className="flex w-full items-center justify-end">
+    <div className="flex w-full items-center justify-between">
+      <select
+        value={selectedAccountId ?? "all"}
+        onChange={(e) =>
+          setSelectedAccountId(e.target.value === "all" ? null : e.target.value)
+        }
+        className="rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-sm"
+      >
+        <option value="all">Todas las cuentas</option>
+        {accounts?.map((a) => (
+          <option key={a.id} value={a.id}>
+            {a.name} ••{a.mask}
+          </option>
+        ))}
+      </select>
+
       <div className="flex items-center gap-1 rounded-md border border-neutral-200 p-1">
         {PRESETS.map((p) => (
           <button

@@ -27,6 +27,7 @@ model BankConnection {
   plaidItemId      String  @unique
   plaidAccessToken String
   institutionName  String
+  status           String  @default("ACTIVE") // "ACTIVE" | "ITEM_LOGIN_REQUIRED" | "ERROR"
   lastSyncedAt     DateTime?
   lastSyncCursor   String?
 

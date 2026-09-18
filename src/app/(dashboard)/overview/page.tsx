@@ -4,6 +4,7 @@ import { es } from "date-fns/locale";
 import { SpendingTrend } from "../../../components/charts/spending-trend";
 import { Amount } from "../../../components/shared/amount";
 import { resolveRange } from "@/lib/date-range";
+import { fromDbDate } from "@/lib/format";
 
 export default async function OverviewPage({
   searchParams,
@@ -45,7 +46,7 @@ export default async function OverviewPage({
 
     const porMes = new Map<string, { Gastos: number; Ingresos: number }>();
     for (const t of historico) {
-    const clave = format(t.date, "MMM yy", { locale: es });
+    const clave = format(fromDbDate(t.date), "MMM yy", { locale: es });
     const actual = porMes.get(clave) ?? { Gastos: 0, Ingresos: 0 };
     const monto = Number(t.amount);
     if (monto > 0) actual.Gastos += monto;

@@ -15,6 +15,16 @@ export function formatCurrency(
   }).format(amount);
 }
 
+/**
+ * Las columnas `@db.Date` de Prisma llegan como medianoche UTC. Formatearlas
+ * en una zona con offset negativo muestra el día anterior — y mete el día 1 en
+ * el mes previo, rompiendo cualquier agrupación mensual. Esto las reinterpreta
+ * como fecha local.
+ */
+export function fromDbDate(d: Date): Date {
+  return new Date(d.getTime() + d.getTimezoneOffset() * 60_000);
+}
+
 export function normalizeDescription(raw: string): string {
   return raw
     .toUpperCase()

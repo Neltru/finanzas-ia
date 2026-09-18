@@ -6,10 +6,19 @@ export interface Subscription {
   categoryName: string | null;
   montoPromedio: number;
   intervaloDias: number;
+  cadencia: string;
   ocurrencias: number;
   ultimoCargo: Date;
   proximoEstimado: Date;
   costoAnual: number;
+}
+
+function describirCadencia(dias: number): string {
+  if (dias >= 6 && dias <= 8) return "semanal";
+  if (dias >= 13 && dias <= 16) return "quincenal";
+  if (dias >= 28 && dias <= 32) return "mensual";
+  if (dias >= 58 && dias <= 64) return "bimestral";
+  return `cada ${dias} días`;
 }
 
 export async function detectSubscriptions(): Promise<Subscription[]> {
@@ -69,19 +78,28 @@ export async function detectSubscriptions(): Promise<Subscription[]> {
     const proximo = new Date(ultimo.date);
     proximo.setDate(proximo.getDate() + Math.round(intervaloPromedio));
 
+    // Si el estimado ya pasó, avanzar hasta la próxima fecha futura
+    const hoy = new Date();
+    while (proximo < hoy) {
+    proximo.setDate(proximo.getDate() + Math.round(intervaloPromedio));
+    }
+
     subs.push({
       merchant,
       categoryName: ultimo.category?.name ?? null,
       montoPromedio,
       intervaloDias: Math.round(intervaloPromedio),
+      cadencia: describirCadencia(Math.round(intervaloPromedio)),
       ocurrencias: lista.length,
       ultimoCargo: ultimo.date,
       proximoEstimado: proximo,
       costoAnual: montoPromedio * (365 / intervaloPromedio),
     });
+    
   }
 
   return subs.sort((a, b) => b.costoAnual - a.costoAnual);
+  
 }
 
 export interface Anomaly {
@@ -130,7 +148,7 @@ export async function detectAnomalies(): Promise<Anomaly[]> {
     const zScore = (monto - s.media) / s.desviacion;
 
     // 2.5 desviaciones por encima = inusual
-    if (zScore > 2.5) {
+    if (zScore > 2.0) {
       anomalias.push({
         transactionId: t.id,
         merchant: t.merchantName ?? t.rawDescription,
