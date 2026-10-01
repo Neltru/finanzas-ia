@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { router, publicProcedure } from "../trpc";
+import { router, protectedProcedure } from "../trpc";
 import { projectBalance } from "@/server/services/projection.service";
 
 export const projectionRouter = router({
-  balance: publicProcedure
+  balance: protectedProcedure
     .input(
       z
         .object({
@@ -12,7 +12,7 @@ export const projectionRouter = router({
         })
         .optional()
     )
-    .query(async ({ input }) => {
-      return projectBalance(input?.months ?? 6, input?.accountId);
+    .query(async ({ ctx, input }) => {
+      return projectBalance(ctx.userId, input?.months ?? 6, input?.accountId);
     }),
 });
