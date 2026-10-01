@@ -1,4 +1,7 @@
 import { db } from "../../../server/db";
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
+import { authOptions } from "@/server/auth";
 import { startOfMonth, subMonths, format } from "date-fns";
 import { es } from "date-fns/locale";
 import { SpendingTrend } from "../../../components/charts/spending-trend";
@@ -11,11 +14,17 @@ export default async function OverviewPage({
 }: {
   searchParams: { range?: string };
 }) {
+  // Esta página lee db directo (no pasa por tRPC), así que filtra por usuario aquí
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+  if (!userId) redirect("/login");
+  const delUsuario = { account: { bankConnection: { userId } } };
+
   const { from, to } = resolveRange(searchParams.range);
   const now = new Date();
 
   const transactions = await db.transaction.findMany({
-    where: { date: { gte: from, lte: to } },
+    where: { ...delUsuario, date: { gte: from, lte: to } },
     include: { category: true },
   });
 
@@ -39,7 +48,7 @@ export default async function OverviewPage({
     .slice(0, 5);
     const seisMesesAtras = startOfMonth(subMonths(now, 5));
     const historico = await db.transaction.findMany({
-    where: { date: { gte: seisMesesAtras } },
+    where: { ...delUsuario, date: { gte: seisMesesAtras } },
     select: { date: true, amount: true },
     orderBy: { date: "asc" },
     });

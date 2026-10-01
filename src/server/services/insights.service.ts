@@ -21,11 +21,16 @@ function describirCadencia(dias: number): string {
   return `cada ${dias} días`;
 }
 
-export async function detectSubscriptions(): Promise<Subscription[]> {
-  const desde = subMonths(new Date(), 6);
+export async function detectSubscriptions(userId: string): Promise<Subscription[]> {
+  // 12 meses: una cadencia bimestral necesita ~6 meses para juntar 3 cargos
+  const desde = subMonths(new Date(), 12);
 
   const txs = await db.transaction.findMany({
-    where: { date: { gte: desde }, amount: { gt: 0 } },
+    where: {
+      account: { bankConnection: { userId } },
+      date: { gte: desde },
+      amount: { gt: 0 },
+    },
     include: { category: { select: { name: true } } },
     orderBy: { date: "asc" },
   });
@@ -112,11 +117,15 @@ export interface Anomaly {
   vecesPromedio: number;
 }
 
-export async function detectAnomalies(): Promise<Anomaly[]> {
+export async function detectAnomalies(userId: string): Promise<Anomaly[]> {
   const desde = subMonths(new Date(), 6);
 
   const txs = await db.transaction.findMany({
-    where: { date: { gte: desde }, amount: { gt: 0 } },
+    where: {
+      account: { bankConnection: { userId } },
+      date: { gte: desde },
+      amount: { gt: 0 },
+    },
     include: { category: { select: { name: true } } },
   });
 

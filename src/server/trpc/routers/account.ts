@@ -1,16 +1,15 @@
-import { router, publicProcedure } from "../trpc";
+import { router, publicProcedure, protectedProcedure } from "../trpc";
 
 export const accountRouter = router({
-  list: publicProcedure.query(async ({ ctx }) => {
-    const accounts = await ctx.db.account.findMany({
-      include: {
-        bankConnection: {
-          select: { institutionName: true, status: true, lastSyncedAt: true },
-        },
-        _count: { select: { transactions: true } },
-      },
-      orderBy: { name: "asc" },
-    });
+  list: protectedProcedure.query(async ({ ctx }) => {
+  const accounts = await ctx.db.account.findMany({
+    where: { bankConnection: { userId: ctx.userId } },
+    include: {
+      bankConnection: true,
+      _count: { select: { transactions: true } },
+    },
+    orderBy: { name: "asc" },
+  });
 
     return accounts.map((a) => ({
       id: a.id,

@@ -1,16 +1,16 @@
-import { router, publicProcedure } from "../trpc";
+import { router, protectedProcedure } from "../trpc";
 import { detectSubscriptions, detectAnomalies } from "@/server/services/insights.service";
 
 export const insightsRouter = router({
-  subscriptions: publicProcedure.query(async () => {
-    return detectSubscriptions();
+  subscriptions: protectedProcedure.query(async ({ ctx }) => {
+    return detectSubscriptions(ctx.userId);
   }),
 
-  anomalies: publicProcedure.query(async () => {
-    return detectAnomalies();
+  anomalies: protectedProcedure.query(async ({ ctx }) => {
+    return detectAnomalies(ctx.userId);
   }),
 
-  aiSavings: publicProcedure.query(async ({ ctx }) => {
+  aiSavings: protectedProcedure.query(async ({ ctx }) => {
     const cache = await ctx.db.categorizationCache.findMany({
       select: { hitCount: true },
     });

@@ -57,10 +57,14 @@ async function main() {
   await prisma.account.deleteMany();
   await prisma.bankConnection.deleteMany();
   await prisma.category.deleteMany();
-  await prisma.user.deleteMany();
 
-  const user = await prisma.user.create({
-    data: { email: "demo@finanzas.app", name: "Usuario Demo" },
+
+  const email = process.env.SEED_EMAIL ?? "demo@finanzas.app";
+
+  const user = await prisma.user.upsert({
+    where: { email },
+    create: { email, name: "Usuario Demo" },
+    update: {},
   });
 
   const categories = await Promise.all(

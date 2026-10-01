@@ -21,20 +21,29 @@ export interface ProjectionResult {
 }
 
 export async function projectBalance(
+  userId: string,
   mesesAdelante = 6,
   accountId?: string
 ): Promise<ProjectionResult> {
   const hoy = new Date();
   const desde = startOfMonth(subMonths(hoy, 6));
 
+  // Filtrar siempre por dueño: un accountId ajeno devuelve vacío, no datos de otro usuario
   const accounts = await db.account.findMany({
-    where: accountId ? { id: accountId } : undefined,
+    where: {
+      bankConnection: { userId },
+      ...(accountId && { id: accountId }),
+    },
     select: { currentBalance: true },
   });
   const balanceActual = accounts.reduce((s, a) => s + Number(a.currentBalance), 0);
 
   const txs = await db.transaction.findMany({
-    where: { date: { gte: desde }, ...(accountId && { accountId }) },
+    where: {
+      account: { bankConnection: { userId } },
+      date: { gte: desde },
+      ...(accountId && { accountId }),
+    },
     select: { date: true, amount: true },
     orderBy: { date: "asc" },
   });
@@ -62,7 +71,7 @@ export async function projectBalance(
   const flujoNetoMensual = ingresoMensualPromedio - gastoMensualPromedio;
 
   // Cuánto del gasto es comprometido (suscripciones detectadas)
-  const subs = await detectSubscriptions();
+  const subs = await detectSubscriptions(userId);
   const gastosFijosMensuales = subs.reduce(
     (s, x) => s + x.montoPromedio * (30 / x.intervaloDias),
     0

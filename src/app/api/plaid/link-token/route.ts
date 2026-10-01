@@ -1,13 +1,20 @@
 import { NextResponse } from "next/server";
 import { createLinkToken } from "@/server/services/plaid.service";
-import { db } from "@/server/db";
+import { getServerSession } from "next-auth";
+import { authOptions, isDemoSession } from "@/server/auth";
 
 export async function POST() {
-  try {
-    // TODO: reemplazar por el usuario de la sesión cuando exista auth
-    const user = await db.user.findFirstOrThrow();
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+  if (!userId) {
+    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+  }
+  if (isDemoSession(session)) {
+    return NextResponse.json({ error: "La cuenta demo es de solo lectura" }, { status: 403 });
+  }
 
-    const linkToken = await createLinkToken(user.id);
+  try {
+    const linkToken = await createLinkToken(userId);
     return NextResponse.json({ linkToken });
   } catch (err: any) {
     console.error("[plaid/link-token]", err?.response?.data ?? err);

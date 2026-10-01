@@ -1,8 +1,9 @@
 import { z } from "zod";
-import { router, publicProcedure } from "../trpc";
+import { TRPCError } from "@trpc/server";
+import { router, protectedProcedure, writeProcedure } from "../trpc";
 
 export const transactionRouter = router({
-  list: publicProcedure
+  list: protectedProcedure
     .input(
       z.object({
         from: z.date().optional(),
@@ -19,6 +20,7 @@ export const transactionRouter = router({
         take: input.limit + 1, // uno extra para saber si hay más
         cursor: input.cursor ? { id: input.cursor } : undefined,
         where: {
+          account: { bankConnection: { userId: ctx.userId } },
           date: { gte: input.from, lte: input.to },
           accountId: input.accountId,
           categoryId: input.categoryId,
@@ -38,9 +40,27 @@ export const transactionRouter = router({
       return { items, nextCursor };
     }),
 
-  updateCategory: publicProcedure
+  updateCategory: writeProcedure
     .input(z.object({ id: z.string(), categoryId: z.string() }))
     .mutation(async ({ ctx, input }) => {
+      // La transacción debe ser del usuario, y la categoría global o suya
+      const [tx, category] = await Promise.all([
+        ctx.db.transaction.findFirst({
+          where: { id: input.id, account: { bankConnection: { userId: ctx.userId } } },
+          select: { id: true },
+        }),
+        ctx.db.category.findFirst({
+          where: {
+            id: input.categoryId,
+            OR: [{ isSystem: true }, { userId: ctx.userId }],
+          },
+          select: { id: true },
+        }),
+      ]);
+      if (!tx || !category) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+
       return ctx.db.transaction.update({
         where: { id: input.id },
         data: {
