@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { syncTransactions } from "@/server/services/plaid.service";
+import { enqueueSync } from "@/server/jobs/queue";
 import { db } from "@/server/db";
 
 export async function POST(req: Request) {
@@ -23,14 +23,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true, unknown: true });
     }
 
+    // Solo encolar y responder: Plaid espera respuesta rápida, y el sync
+    // completo lo hace el worker
     if (["SYNC_UPDATES_AVAILABLE", "DEFAULT_UPDATE", "INITIAL_UPDATE"].includes(webhook_code)) {
-      await syncTransactions(conn.id);
+      await enqueueSync(conn.id, "webhook");
     }
 
     return NextResponse.json({ ok: true });
   } catch (err: any) {
     console.error("[plaid/webhook]", err);
-    // 200 deliberado: el error ya quedó en SyncLog; reintentar no ayudaría
-    return NextResponse.json({ ok: false }, { status: 200 });
+    // 500 a propósito: si no se pudo encolar (p. ej. Redis caído), que Plaid
+    // reintente. Los errores del sync en sí quedan en SyncLog, no llegan aquí.
+    return NextResponse.json({ ok: false }, { status: 500 });
   }
 }

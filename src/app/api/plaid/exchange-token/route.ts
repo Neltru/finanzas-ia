@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { exchangePublicToken, syncTransactions } from "@/server/services/plaid.service";
+import { exchangePublicToken } from "@/server/services/plaid.service";
+import { enqueueSync } from "@/server/jobs/queue";
 import { db } from "@/server/db";
 import { getServerSession } from "next-auth";
 import { authOptions, isDemoSession } from "@/server/auth";
@@ -41,10 +42,9 @@ export async function POST(req: Request) {
       },
     });
 
-    // Primera sincronización, sin bloquear la respuesta
-    syncTransactions(conn.id).catch((e) =>
-      console.error("[plaid] sync inicial falló:", e)
-    );
+    // La primera sincronización la hace el worker. Antes se lanzaba aquí sin
+    // await, pero Vercel congela la función al responder y nunca terminaba.
+    await enqueueSync(conn.id, "initial");
 
     return NextResponse.json({ ok: true, connectionId: conn.id });
   } catch (err: any) {

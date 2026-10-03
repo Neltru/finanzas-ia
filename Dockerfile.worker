@@ -1,0 +1,34 @@
+# Imagen del worker BullMQ (sync con Plaid + categorización con IA).
+# La usa Railway vía railway.json; sirve igual en Render o cualquier host Docker.
+
+# ── Etapa 1: compilar el worker a un solo archivo ──────────────────────
+FROM node:22-slim AS build
+RUN apt-get update && apt-get install -y --no-install-recommends openssl \
+  && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+# El schema va antes de npm ci porque postinstall corre prisma generate
+COPY package.json package-lock.json ./
+COPY prisma ./prisma
+RUN npm ci
+COPY tsconfig.json ./
+COPY src ./src
+# esbuild resuelve los alias @/ de tsconfig. Prisma queda fuera del bundle
+# porque carga su motor nativo desde node_modules.
+RUN npx esbuild src/server/jobs/worker.ts --bundle --platform=node --target=node22 \
+  --outfile=dist/worker.js --external:@prisma/client --external:.prisma
+
+# ── Etapa 2: imagen final, solo el bundle + el cliente de Prisma ───────
+# (sin esto la imagen pesaba ~1.4 GB por cargar Next.js y el frontend)
+FROM node:22-slim
+# Prisma necesita OpenSSL para su motor de consultas
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+ENV NODE_ENV=production
+
+COPY --from=build /app/dist/worker.js ./worker.js
+COPY --from=build /app/node_modules/@prisma/client ./node_modules/@prisma/client
+COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
+
+USER node
+CMD ["node", "worker.js"]

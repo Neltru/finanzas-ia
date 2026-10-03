@@ -1,5 +1,5 @@
 import { db } from "../src/server/db";
-import { categorizeQueue } from "../src/server/jobs/queue";
+import { getCategorizeQueue } from "../src/server/jobs/queue";
 
 async function main() {
   const sinClasificar = await db.category.findFirst({
@@ -20,7 +20,7 @@ async function main() {
   console.log(`Encolando ${txs.length} transacciones:`);
   txs.slice(0, 5).forEach((t) => console.log(`  - ${t.rawDescription}`));
 
-  const job = await categorizeQueue.add("categorize", {
+  const job = await getCategorizeQueue().add("categorize", {
     transactionIds: txs.map((t) => t.id),
   });
 
