@@ -7,7 +7,7 @@ import {
 } from "plaid";
 import { db } from "@/server/db";
 import { normalizeDescription } from "@/lib/format";
-import { categorizeQueue } from "@/server/jobs/queue";
+import { getCategorizeQueue, type SyncJobData } from "@/server/jobs/queue";
 
 // ──────────────────────────────────────────────
 // Cliente
@@ -36,6 +36,9 @@ export async function createLinkToken(userId: string) {
     products: [Products.Transactions],
     country_codes: [CountryCode.Us],
     language: "es",
+    // Sin esto Plaid nunca avisa de transacciones nuevas. En local no hay
+    // URL pública, así que se omite y solo se sincroniza al conectar.
+    ...(process.env.PLAID_WEBHOOK_URL && { webhook: process.env.PLAID_WEBHOOK_URL }),
   });
   return res.data.link_token;
 }
@@ -54,17 +57,20 @@ export async function exchangePublicToken(publicToken: string) {
 // Sincronización incremental e idempotente
 // ──────────────────────────────────────────────
 
-export async function syncTransactions(bankConnectionId: string) {
+// La ejecuta el worker (jobs/sync-transactions.worker.ts), nunca una función de
+// Vercel: puede tardar más que el timeout, y Vercel congela la función al responder.
+export async function syncTransactions(
+  bankConnectionId: string,
+  triggeredBy: SyncJobData["triggeredBy"] = "manual"
+) {
   const conn = await db.bankConnection.findUniqueOrThrow({
     where: { id: bankConnectionId },
   });
 
-  // The generated Prisma client may not expose this delegate until it is regenerated.
-  const syncLog = (db as typeof db & { syncLog: typeof db extends { syncLog: infer T } ? T : any }).syncLog;
-  const log = await syncLog.create({
+  const log = await db.syncLog.create({
     data: {
       bankConnectionId,
-      triggeredBy: "webhook",
+      triggeredBy,
       status: "running",
     },
   });
@@ -165,12 +171,12 @@ export async function syncTransactions(bankConnectionId: string) {
 
     // Encolar categorización en lotes de 50
     for (let i = 0; i < nuevas.length; i += 50) {
-      await categorizeQueue.add("categorize", {
+      await getCategorizeQueue().add("categorize", {
         transactionIds: nuevas.slice(i, i + 50),
       });
     }
 
-    await syncLog.update({
+    await db.syncLog.update({
       where: { id: log.id },
       data: {
         status: "success",
@@ -183,7 +189,7 @@ export async function syncTransactions(bankConnectionId: string) {
 
     return { added, modified, removed, encoladas: nuevas.length };
   } catch (err: any) {
-    await syncLog.update({
+    await db.syncLog.update({
       where: { id: log.id },
       data: {
         status: "error",

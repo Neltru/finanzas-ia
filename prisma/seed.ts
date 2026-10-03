@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, type Category } from "@prisma/client";
 import { faker } from "@faker-js/faker";
 import { addMonths, addDays, startOfMonth } from "date-fns";
 
@@ -51,29 +51,32 @@ function randomAmount(min: number, max: number): number {
 async function main() {
   console.log(" Seeding...");
 
-  // Limpiar en orden inverso a las dependencias (hijos antes que padres)
-  await prisma.transaction.deleteMany();
-  await prisma.categorizationCache.deleteMany();
-  await prisma.account.deleteMany();
-  await prisma.bankConnection.deleteMany();
-  await prisma.category.deleteMany();
-
-
-  const email = process.env.SEED_EMAIL ?? "demo@finanzas.app";
-
+  // Se corre también contra producción para crear el demo, así que solo toca
+  // datos del usuario demo. (Antes borraba las tablas completas, y con
+  // SEED_EMAIL dejó los datos demo a nombre de una cuenta real.)
   const user = await prisma.user.upsert({
-    where: { email },
-    create: { email, name: "Usuario Demo" },
+    where: { email: "demo@finanzas.app" },
+    create: { email: "demo@finanzas.app", name: "Usuario Demo" },
     update: {},
   });
 
-  const categories = await Promise.all(
-    SYSTEM_CATEGORIES.map((c) =>
-      prisma.category.create({
-        data: { name: c.name, icon: c.icon, color: c.color, isSystem: true },
-      })
-    )
-  );
+  // Borrar las conexiones del demo arrastra cuentas y transacciones (cascade)
+  await prisma.bankConnection.deleteMany({ where: { userId: user.id } });
+
+  // Categorías globales: crear solo las que falten. No se borran porque las
+  // transacciones de usuarios reales apuntan a ellas.
+  const categories: Category[] = [];
+  for (const c of SYSTEM_CATEGORIES) {
+    const existente = await prisma.category.findFirst({
+      where: { name: c.name, isSystem: true },
+    });
+    categories.push(
+      existente ??
+        (await prisma.category.create({
+          data: { name: c.name, icon: c.icon, color: c.color, isSystem: true },
+        }))
+    );
+  }
   const catByName = new Map(categories.map((c) => [c.name, c]));
 
   const connection = await prisma.bankConnection.create({
@@ -209,13 +212,16 @@ async function main() {
   for (const v of VARIABLE) seen.set(v.merchant, v.category);
 
   for (const [desc, catName] of seen) {
-    await prisma.categorizationCache.create({
-      data: {
+    // upsert: el cache es global y puede tener ya entradas de usuarios reales
+    await prisma.categorizationCache.upsert({
+      where: { normalizedDescription: desc },
+      create: {
         normalizedDescription: desc,
         categoryId: catByName.get(catName)!.id,
         confidence: 0.93,
         hitCount: Math.floor(randomAmount(5, 60)),
       },
+      update: {},
     });
   }
   

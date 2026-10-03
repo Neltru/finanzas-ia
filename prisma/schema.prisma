@@ -3,8 +3,12 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  // En producción (Neon): DATABASE_URL es la conexión con pooler para las
+  // funciones serverless; DIRECT_URL es la directa, para migraciones.
+  // En local las dos pueden ser la misma.
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -41,6 +45,7 @@ model BankConnection {
   updatedAt DateTime @updatedAt
 
   accounts Account[]
+  syncLogs SyncLog[]
 
   @@map("bank_connections")
 }
@@ -155,4 +160,24 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+// Una fila por ejecución de sincronización con Plaid (la escribe el worker)
+model SyncLog {
+  id               String         @id @default(cuid())
+  bankConnectionId String
+  bankConnection   BankConnection @relation(fields: [bankConnectionId], references: [id], onDelete: Cascade)
+
+  triggeredBy          String // "webhook" | "initial" | "manual"
+  status               String // "running" | "success" | "error"
+  transactionsAdded    Int     @default(0)
+  transactionsModified Int     @default(0)
+  transactionsRemoved  Int     @default(0)
+  errorMessage         String?
+
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+
+  @@index([bankConnectionId, startedAt])
+  @@map("sync_logs")
 }
