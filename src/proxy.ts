@@ -1,6 +1,6 @@
 import { withAuth } from "next-auth/middleware";
 
-// El middleware no lee authOptions: hay que repetir aquí la página de login
+// Antes middleware.ts (Next 16 lo renombra a proxy). No lee authOptions: hay que repetir aquí la página de login
 export default withAuth({
   pages: { signIn: "/login" },
 });

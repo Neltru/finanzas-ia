@@ -12,15 +12,16 @@ import { fromDbDate } from "@/lib/format";
 export default async function OverviewPage({
   searchParams,
 }: {
-  searchParams: { range?: string };
+  searchParams: Promise<{ range?: string }>;
 }) {
+  const { range } = await searchParams;
   // Esta página lee db directo (no pasa por tRPC), así que filtra por usuario aquí
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
   if (!userId) redirect("/login");
   const delUsuario = { account: { bankConnection: { userId } } };
 
-  const { from, to } = resolveRange(searchParams.range);
+  const { from, to } = resolveRange(range);
   const now = new Date();
 
   const transactions = await db.transaction.findMany({
