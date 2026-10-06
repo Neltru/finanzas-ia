@@ -3,8 +3,15 @@ import { enqueueSync } from "@/server/jobs/queue";
 import { db } from "@/server/db";
 
 export async function POST(req: Request) {
+  let body: any;
   try {
-    const body = await req.json();
+    body = await req.json();
+  } catch {
+    // Cuerpo inválido: es un error del que llama, no nuestro (y no debe reintentarse)
+    return NextResponse.json({ ok: false, error: "JSON inválido" }, { status: 400 });
+  }
+
+  try {
     const { webhook_type, webhook_code, item_id } = body;
 
     console.log(`[plaid/webhook] ${webhook_type}/${webhook_code} item=${item_id}`);
