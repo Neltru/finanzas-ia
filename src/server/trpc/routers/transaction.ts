@@ -29,7 +29,9 @@ export const transactionRouter = router({
           }),
         },
         include: { category: true, account: { select: { name: true, mask: true } } },
-        orderBy: { date: "desc" },
+        // El id desempata: muchas transacciones comparten fecha, y con un orden
+        // no único el cursor repetía unas filas y se saltaba otras entre páginas
+        orderBy: [{ date: "desc" }, { id: "desc" }],
       });
 
       let nextCursor: string | undefined;
