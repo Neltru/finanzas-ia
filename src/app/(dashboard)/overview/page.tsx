@@ -6,22 +6,29 @@ import { startOfMonth, subMonths, format } from "date-fns";
 import { es } from "date-fns/locale";
 import { SpendingTrend } from "../../../components/charts/spending-trend";
 import { Amount } from "../../../components/shared/amount";
-import { resolveRange } from "@/lib/date-range";
+import { PRESETS, parsePreset, resolveRange } from "@/lib/date-range";
 import { fromDbDate } from "@/lib/format";
 
 export default async function OverviewPage({
   searchParams,
 }: {
-  searchParams: Promise<{ range?: string }>;
+  searchParams: Promise<{ range?: string; account?: string }>;
 }) {
-  const { range } = await searchParams;
-  // Esta página lee db directo (no pasa por tRPC), así que filtra por usuario aquí
+  const { range, account } = await searchParams;
+  // Esta página lee db directo (no pasa por tRPC), así que filtra por usuario aquí.
+  // El accountId de la URL va combinado con el filtro de dueño: una cuenta
+  // ajena no devuelve nada.
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
   if (!userId) redirect("/login");
-  const delUsuario = { account: { bankConnection: { userId } } };
+  const delUsuario = {
+    account: { bankConnection: { userId } },
+    ...(account && { accountId: account }),
+  };
 
-  const { from, to } = resolveRange(range);
+  const preset = parsePreset(range);
+  const periodo = PRESETS.find((p) => p.value === preset)!.descripcion;
+  const { from, to } = resolveRange(preset);
   const now = new Date();
 
   const transactions = await db.transaction.findMany({
@@ -49,7 +56,7 @@ export default async function OverviewPage({
     .slice(0, 5);
     const seisMesesAtras = startOfMonth(subMonths(now, 5));
     const historico = await db.transaction.findMany({
-    where: { ...delUsuario, date: { gte: seisMesesAtras } },
+    where: { ...delUsuario, date: { gte: seisMesesAtras, lte: to } },
     select: { date: true, amount: true },
     orderBy: { date: "asc" },
     });
@@ -68,9 +75,12 @@ export default async function OverviewPage({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Resumen del mes</h1>
+      <div>
+        <h1 className="text-2xl font-semibold">Resumen</h1>
+        <p className="mt-0.5 text-sm text-neutral-500">{periodo}</p>
+      </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded-lg border border-neutral-200 bg-white p-4">
           <p className="text-sm text-neutral-500">Ingresos</p>
           <Amount
@@ -111,7 +121,7 @@ export default async function OverviewPage({
       </div>
 
       <p className="text-sm text-neutral-500">
-        {transactions.length} transacciones este mes
+        {transactions.length} transacciones en el periodo
       </p>
     </div>
   );

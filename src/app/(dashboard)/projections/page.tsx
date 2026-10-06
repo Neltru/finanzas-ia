@@ -5,18 +5,19 @@ import { useQuery } from "@tanstack/react-query";
 import { LineChart } from "@tremor/react";
 import { useTRPC } from "@/lib/trpc";
 import { useFiltersStore } from "@/stores/filters.store";
+import { useDashboardFilters } from "@/lib/use-dashboard-filters";
 import { Amount } from "@/components/shared/amount";
 
 export default function ProjectionsPage() {
   const trpc = useTRPC();
   const privacyMode = useFiltersStore((s) => s.privacyMode);
-  const selectedAccountId = useFiltersStore((s) => s.selectedAccountId);
+  const { accountId } = useDashboardFilters();
   const [meses, setMeses] = useState(6);
 
   const { data, isLoading } = useQuery(
     trpc.projection.balance.queryOptions({
       months: meses,
-      accountId: selectedAccountId ?? undefined,
+      accountId: accountId ?? undefined,
     })
   );
 
@@ -31,7 +32,7 @@ export default function ProjectionsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-semibold">Proyecciones</h1>
         <div className="flex gap-1 rounded-md border border-neutral-200 p-1">
           {[3, 6, 12].map((m) => (
@@ -54,7 +55,7 @@ export default function ProjectionsPage() {
         <div className="h-80 animate-pulse rounded-lg bg-neutral-200" />
       ) : (
         <>
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             <Metric label="Balance actual" value={data!.balanceActual} />
             <Metric
               label="Ingreso mensual"
@@ -74,7 +75,7 @@ export default function ProjectionsPage() {
           </div>
 
           <div className="rounded-lg border border-neutral-200 bg-white p-4">
-            <div className="mb-3 flex items-baseline justify-between">
+            <div className="mb-3 flex flex-wrap items-baseline justify-between gap-1">
               <h2 className="font-medium">Balance proyectado</h2>
               <span className="text-sm text-neutral-500">
                 en {meses} meses:{" "}

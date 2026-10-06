@@ -112,9 +112,7 @@ async function main() {
   });
 
   const start = startOfMonth(addMonths(new Date(), -(MONTHS_OF_HISTORY - 1)));
-  let checkingBalance = 15000;
-  let creditBalance = 0;
-  const txs: any[] = [];
+  const generadas: any[] = [];
 
   for (let m = 0; m < MONTHS_OF_HISTORY; m++) {
     const monthStart = addMonths(start, m);
@@ -122,8 +120,7 @@ async function main() {
     // Nómina quincenal (negativo = ingreso, convención Plaid)
     for (const payday of [1, 15]) {
       const amount = -randomAmount(11000, 12500);
-      checkingBalance -= amount;
-      txs.push({
+      generadas.push({
         accountId: checking.id,
         plaidTransactionId: `demo-${faker.string.uuid()}`,
         amount,
@@ -140,8 +137,7 @@ async function main() {
     for (const r of RECURRING) {
       const jitter = r.variance ? randomAmount(-r.variance, r.variance) : randomAmount(-2, 2);
       const amount = Math.round((r.amount + jitter) * 100) / 100;
-      checkingBalance -= amount;
-      txs.push({
+      generadas.push({
         accountId: checking.id,
         plaidTransactionId: `demo-${faker.string.uuid()}`,
         amount,
@@ -161,8 +157,7 @@ async function main() {
     for (let i = 0; i < n; i++) {
       const v = VARIABLE[Math.floor(Math.random() * VARIABLE.length)];
       const amount = randomAmount(v.min, v.max);
-      creditBalance += amount;
-      txs.push({
+      generadas.push({
         accountId: credit.id,
         plaidTransactionId: `demo-${faker.string.uuid()}`,
         amount,
@@ -179,8 +174,7 @@ async function main() {
     for (let i = 0; i < 3; i++) {
       const amount = randomAmount(20, 300);
       const ref = faker.string.alphanumeric(10).toUpperCase();
-      creditBalance += amount;
-      txs.push({
+      generadas.push({
         accountId: credit.id,
         plaidTransactionId: `demo-${faker.string.uuid()}`,
         amount,
@@ -193,6 +187,17 @@ async function main() {
       });
     }
   }
+
+  // El mes en curso se llena con días al azar (1-28): sin este filtro quedaban
+  // cargos con fecha futura, y los insights calculaban mal el próximo cobro.
+  const hoy = new Date();
+  const txs = generadas.filter((t) => t.date <= hoy);
+
+  // Saldos a partir de lo que sí se insertó (convención Plaid: monto > 0 = gasto)
+  const sumar = (accountId: string) =>
+    txs.filter((t) => t.accountId === accountId).reduce((s, t) => s + t.amount, 0);
+  const checkingBalance = 15000 - sumar(checking.id);
+  const creditBalance = sumar(credit.id);
 
   console.log(`Insertando ${txs.length} transacciones...`);
   await prisma.transaction.createMany({ data: txs });

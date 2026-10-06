@@ -3,11 +3,11 @@ import GoogleProvider from "next-auth/providers/google";
 import type { NextAuthOptions } from "next-auth";
 import { db } from "@/server/db";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { DEMO_EMAIL, isDemoEmail } from "@/lib/demo";
 
 // La cuenta demo la comparte cualquiera que entre: es de solo lectura
-export const DEMO_EMAIL = "demo@finanzas.app";
 export const isDemoSession = (session: { user?: { email?: string | null } } | null) =>
-  session?.user?.email === DEMO_EMAIL;
+  isDemoEmail(session?.user?.email);
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(
