@@ -57,7 +57,11 @@ export default function ProjectionsPage() {
       ) : (
         <>
           <div data-tour="projection-metrics" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <Metric label="Balance actual" value={data!.balanceActual} />
+            <Metric
+              label="Balance actual"
+              value={data!.balanceActual}
+              className={data!.balanceActual < 0 ? "text-red-600" : ""}
+            />
             <Metric
               label="Ingreso mensual"
               value={data!.ingresoMensualPromedio}

@@ -20,7 +20,10 @@ export default function AccountsPage() {
         {data && (
           <div data-tour="net-worth" className="text-right">
             <p className="text-xs text-neutral-500">Patrimonio neto</p>
-            <Amount value={patrimonio} className="text-xl font-semibold" />
+            <Amount
+              value={patrimonio}
+              className={`text-xl font-semibold ${patrimonio < 0 ? "text-red-600" : ""}`}
+            />
           </div>
         )}
       </div>

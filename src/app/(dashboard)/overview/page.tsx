@@ -99,7 +99,7 @@ export default async function OverviewPage({
           <p className="text-sm text-neutral-500">Balance</p>
           <Amount
             value={ingresos - gastos}
-            className="mt-1 block text-2xl font-semibold"
+            className={`mt-1 block text-2xl font-semibold ${ingresos - gastos < 0 ? "text-red-600" : ""}`}
           />
         </div>
       </div>

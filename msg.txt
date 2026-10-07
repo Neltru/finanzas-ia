@@ -1,0 +1,18 @@
+feat: tutorial guiado por página para orientar a nuevos usuarios
+
+La página resultaba confusa al entrar por primera vez. Se agrega un tour
+con notas que resaltan cada parte de la interfaz y explican dónde
+interactuar (driver.js, MIT, sin dependencias).
+
+- Contenido en src/components/tour/tour-steps.ts, separado por página:
+  Resumen, Transacciones, Cuentas, Insights, Proyecciones y Conectar banco
+- Los elementos señalados se marcan con data-tour="<nombre>"; los pasos
+  cuyo elemento no está en pantalla se omiten (p. ej. "Cargar más" con
+  menos de 50 transacciones) y en móvil el menú lateral cae al botón ☰
+- Textos distintos para la cuenta demo (solo lectura)
+- Arranca solo la primera vez que se visita cada sección y se guarda en
+  localStorage al mostrarse; el botón "?" de la barra superior lo repite
+- Antes de arrancar espera a que la pestaña esté visible, a que no haya
+  consultas de React Query en curso y a que el layout deje de moverse;
+  sin esto se omitían pasos cuyas secciones aún no habían cargado
+- Estilos de las notas con la paleta de la app en globals.css
