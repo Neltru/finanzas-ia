@@ -13,6 +13,7 @@ export function FilterBar() {
   return (
     <div className="flex w-full flex-wrap items-center justify-between gap-2">
       <select
+        data-tour="account-filter"
         value={accountId ?? "all"}
         onChange={(e) => setAccountId(e.target.value === "all" ? null : e.target.value)}
         aria-label="Cuenta"
@@ -26,7 +27,7 @@ export function FilterBar() {
         ))}
       </select>
 
-      <div className="flex items-center gap-1 rounded-md border border-neutral-200 p-1">
+      <div data-tour="date-filter" className="flex items-center gap-1 rounded-md border border-neutral-200 p-1">
         {PRESETS.map((p) => (
           <button
             key={p.value}

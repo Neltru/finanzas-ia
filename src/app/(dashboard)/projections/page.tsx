@@ -35,7 +35,7 @@ export default function ProjectionsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-semibold">Proyecciones</h1>
-        <div className="flex gap-1 rounded-md border border-neutral-200 p-1">
+        <div data-tour="horizon" className="flex gap-1 rounded-md border border-neutral-200 p-1">
           {[3, 6, 12].map((m) => (
             <button
               key={m}
@@ -56,7 +56,7 @@ export default function ProjectionsPage() {
         <div className="h-80 animate-pulse rounded-lg bg-neutral-200" />
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <div data-tour="projection-metrics" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             <Metric label="Balance actual" value={data!.balanceActual} />
             <Metric
               label="Ingreso mensual"
@@ -75,7 +75,7 @@ export default function ProjectionsPage() {
             />
           </div>
 
-          <div className="rounded-lg border border-neutral-200 bg-white p-4">
+          <div data-tour="projection-chart" className="rounded-lg border border-neutral-200 bg-white p-4">
             <div className="mb-3 flex flex-wrap items-baseline justify-between gap-1">
               <h2 className="font-medium">Balance proyectado</h2>
               <span className="text-sm text-neutral-500">
@@ -104,7 +104,7 @@ export default function ProjectionsPage() {
             </p>
           </div>
 
-          <div className="rounded-lg border border-neutral-200 bg-white p-4">
+          <div data-tour="committed" className="rounded-lg border border-neutral-200 bg-white p-4">
             <h2 className="mb-2 font-medium">Gastos comprometidos</h2>
             <p className="text-sm text-neutral-600">
               <Amount

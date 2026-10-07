@@ -18,7 +18,7 @@ export default function AccountsPage() {
       <div className="flex items-baseline justify-between">
         <h1 className="text-2xl font-semibold">Cuentas</h1>
         {data && (
-          <div className="text-right">
+          <div data-tour="net-worth" className="text-right">
             <p className="text-xs text-neutral-500">Patrimonio neto</p>
             <Amount value={patrimonio} className="text-xl font-semibold" />
           </div>
@@ -32,7 +32,7 @@ export default function AccountsPage() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div data-tour="account-cards" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {data?.map((a) => {
             const esCredito = a.type === "credit_card";
             const Icon = esCredito ? CreditCard : Landmark;

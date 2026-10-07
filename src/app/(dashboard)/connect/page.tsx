@@ -87,6 +87,7 @@ export default function ConnectPage() {
       )}
 
       <button
+        data-tour="connect-button"
         onClick={() => (linkToken ? open() : iniciar())}
         disabled={isDemo || estado === "cargando" || estado === "conectando" || (!!linkToken && !ready)}
         className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 font-medium text-white transition-colors hover:bg-emerald-600 disabled:opacity-50"
@@ -103,7 +104,7 @@ export default function ConnectPage() {
           : "Conectar cuenta bancaria"}
       </button>
 
-      <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-xs text-neutral-500">
+      <div data-tour="sandbox-note" className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-xs text-neutral-500">
         <p className="font-medium text-neutral-700">Modo sandbox</p>
         <p className="mt-1">
           Usa cualquier banco de la lista con usuario <code className="rounded bg-white px-1">user_good</code> y

@@ -22,7 +22,7 @@ export default function InsightsPage() {
       <h1 className="text-2xl font-semibold">Insights</h1>
 
       {/* Suscripciones detectadas */}
-      <section className="rounded-lg border border-neutral-200 bg-white p-4">
+      <section data-tour="subscriptions" className="rounded-lg border border-neutral-200 bg-white p-4">
         <div className="mb-3 flex items-baseline justify-between">
           <h2 className="font-medium">Suscripciones detectadas</h2>
           {subs.data && subs.data.length > 0 && (
@@ -62,7 +62,7 @@ export default function InsightsPage() {
       </section>
 
       {/* Gastos inusuales */}
-      <section className="rounded-lg border border-neutral-200 bg-white p-4">
+      <section data-tour="anomalies" className="rounded-lg border border-neutral-200 bg-white p-4">
         <h2 className="mb-3 font-medium">Gastos inusuales</h2>
 
         {anomalias.isLoading ? (
@@ -89,7 +89,7 @@ export default function InsightsPage() {
 
       {/* Eficiencia del pipeline de IA */}
       {ahorro.data && (
-        <section className="rounded-lg border border-neutral-200 bg-white p-4">
+        <section data-tour="ai-efficiency" className="rounded-lg border border-neutral-200 bg-white p-4">
           <h2 className="mb-2 font-medium">Eficiencia de categorización</h2>
           <p className="text-sm text-neutral-600">
             <span className="font-semibold text-emerald-600">

@@ -94,6 +94,7 @@ export function Sidebar() {
       <div className="flex h-14 shrink-0 items-center justify-between border-b border-neutral-200 bg-white px-4 md:hidden">
         <Logo />
         <button
+          data-tour="menu"
           onClick={() => setOpen(true)}
           aria-label="Abrir menú"
           className="rounded-md p-2 text-neutral-600 hover:bg-neutral-100"
@@ -125,7 +126,7 @@ export function Sidebar() {
           </button>
         </div>
 
-        <nav className="flex-1 space-y-1 px-3 py-4">
+        <nav data-tour="nav" className="flex-1 space-y-1 px-3 py-4">
           <Suspense fallback={<NavLinks qs="" onNavigate={() => setOpen(false)} />}>
             <NavLinksConFiltros onNavigate={() => setOpen(false)} />
           </Suspense>
@@ -150,6 +151,7 @@ export function Sidebar() {
           </div>
         )}
         <button
+          data-tour="privacy"
           onClick={togglePrivacyMode}
           className="mx-3 mb-4 flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-neutral-600 hover:bg-neutral-100"
         >

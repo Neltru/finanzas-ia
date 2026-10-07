@@ -80,7 +80,7 @@ export default async function OverviewPage({
         <p className="mt-0.5 text-sm text-neutral-500">{periodo}</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div data-tour="summary-cards" className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded-lg border border-neutral-200 bg-white p-4">
           <p className="text-sm text-neutral-500">Ingresos</p>
           <Amount
@@ -103,12 +103,12 @@ export default async function OverviewPage({
           />
         </div>
       </div>
-      <div className="rounded-lg border border-neutral-200 bg-white p-4">
+      <div data-tour="trend-chart" className="rounded-lg border border-neutral-200 bg-white p-4">
         <h2 className="mb-3 font-medium">Ingresos vs gastos (6 meses)</h2>
             <SpendingTrend data={tendencia} />
       </div>
 
-      <div className="rounded-lg border border-neutral-200 bg-white p-4">
+      <div data-tour="top-categories" className="rounded-lg border border-neutral-200 bg-white p-4">
         <h2 className="mb-3 font-medium">Top categorías de gasto</h2>
         <ul className="space-y-2">
           {topCategorias.map(([nombre, monto]) => (

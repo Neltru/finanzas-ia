@@ -67,6 +67,7 @@ export function CategorySelect({
   return (
     <div>
       <select
+        data-tour="category-select"
         value={currentCategoryId ?? ""}
         onChange={(e) => mutation.mutate({ id: transactionId, categoryId: e.target.value })}
         // El servidor ya rechaza la escritura del demo (403); deshabilitarlo
