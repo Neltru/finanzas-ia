@@ -152,8 +152,10 @@ async function main() {
       });
     }
 
-    // Gasto variable en tarjeta: 25-40 transacciones al mes
-    const n = Math.floor(randomAmount(25, 40));
+    // Gasto variable en tarjeta: 15-24 transacciones al mes. Con 25-40 el
+    // gasto promedio era el 107% del ingreso y el demo se veía en números
+    // rojos; así queda en ~83% (simulado: solo ~5% de los meses en rojo).
+    const n = Math.floor(randomAmount(15, 24));
     for (let i = 0; i < n; i++) {
       const v = VARIABLE[Math.floor(Math.random() * VARIABLE.length)];
       const amount = randomAmount(v.min, v.max);
@@ -193,11 +195,18 @@ async function main() {
   const hoy = new Date();
   const txs = generadas.filter((t) => t.date <= hoy);
 
-  // Saldos a partir de lo que sí se insertó (convención Plaid: monto > 0 = gasto)
-  const sumar = (accountId: string) =>
-    txs.filter((t) => t.accountId === accountId).reduce((s, t) => s + t.amount, 0);
-  const checkingBalance = 15000 - sumar(checking.id);
-  const creditBalance = sumar(credit.id);
+  // Saldos a partir de lo que sí se insertó (convención Plaid: monto > 0 = gasto).
+  // La tarjeta se liquida completa cada mes desde débito, así que su saldo es
+  // solo lo gastado este mes; antes nunca se pagaba y acumulaba ~$100k de deuda.
+  // El patrimonio (débito - tarjeta) queda igual: 15000 + ingresos - gastos.
+  const inicioMes = startOfMonth(hoy);
+  const sumar = (accountId: string, desde?: Date) =>
+    txs
+      .filter((t) => t.accountId === accountId && (!desde || t.date >= desde))
+      .reduce((s, t) => s + t.amount, 0);
+  const creditBalance = sumar(credit.id, inicioMes);
+  const tarjetaYaPagada = sumar(credit.id) - creditBalance;
+  const checkingBalance = 15000 - sumar(checking.id) - tarjetaYaPagada;
 
   console.log(`Insertando ${txs.length} transacciones...`);
   await prisma.transaction.createMany({ data: txs });
