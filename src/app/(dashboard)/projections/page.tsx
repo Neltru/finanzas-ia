@@ -7,6 +7,7 @@ import { useTRPC } from "@/lib/trpc";
 import { useFiltersStore } from "@/stores/filters.store";
 import { useDashboardFilters } from "@/lib/use-dashboard-filters";
 import { Amount } from "@/components/shared/amount";
+import { CHART_Y_AXIS_WIDTH, formatChartMoney } from "@/lib/format";
 
 export default function ProjectionsPage() {
   const trpc = useTRPC();
@@ -92,11 +93,8 @@ export default function ProjectionsPage() {
               categories={["Histórico", "Proyección"]}
               colors={["blue", "emerald"]}
               connectNulls={false}
-              valueFormatter={(v) =>
-                privacyMode
-                  ? "••••"
-                  : `$${v.toLocaleString("es-MX", { maximumFractionDigits: 0 })}`
-              }
+              valueFormatter={(v) => formatChartMoney(v, privacyMode)}
+              yAxisWidth={CHART_Y_AXIS_WIDTH}
               className="h-72"
             />
 

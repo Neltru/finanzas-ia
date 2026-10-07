@@ -2,6 +2,7 @@
 
 import { AreaChart } from "@tremor/react";
 import { useFiltersStore } from "../../stores/filters.store";
+import { CHART_Y_AXIS_WIDTH, formatChartMoney } from "@/lib/format";
 
 interface Point {
   mes: string;
@@ -18,11 +19,8 @@ export function SpendingTrend({ data }: { data: Point[] }) {
       index="mes"
       categories={["Ingresos", "Gastos"]}
       colors={["emerald", "red"]}
-      valueFormatter={(v) =>
-        privacyMode
-          ? "••••"
-          : `$${v.toLocaleString("es-MX", { maximumFractionDigits: 0 })}`
-      }
+      valueFormatter={(v) => formatChartMoney(v, privacyMode)}
+      yAxisWidth={CHART_Y_AXIS_WIDTH}
       className="h-72"
     />
   );
